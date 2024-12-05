@@ -1,5 +1,38 @@
-controllers:
-    resource:
-        path: ../src/Controller/
-        namespace: App\Controller
-    type: attribute
+# controllers:
+#     resource:
+#         path: ../src/Controller/
+#         namespace: App\Controller
+#     type: attribute
+
+app_login:
+  path: /api/login
+  controller: App\Controller\SecurityController::login
+
+user_list:
+  path: /api/users
+  controller: App\Controller\UserController::index
+  methods: GET
+
+# Route pour afficher un utilisateur spécifique
+user_show:
+  path: /api/users/{id}
+  controller: App\Controller\UserController::show
+  methods: GET
+
+# Route pour créer un utilisateur
+user_create:
+  path: /api/users
+  controller: App\Controller\UserController::create
+  methods: POST
+
+# Route pour mettre à jour un utilisateur
+user_update:
+  path: /api/users/{id}
+  controller: App\Controller\UserController::update
+  methods: PUT
+
+# Route pour supprimer un utilisateur
+user_delete:
+  path: /api/users/{id}
+  controller: App\Controller\UserController::delete
+  methods: DELETE

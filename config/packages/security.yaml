@@ -1,39 +1,47 @@
 security:
-    # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
-    password_hashers:
-        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
-    # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
-    providers:
-        users_in_memory: { memory: null }
-    firewalls:
-        dev:
-            pattern: ^/(_(profiler|wdt)|css|images|js)/
-            security: false
-        main:
-            lazy: true
-            provider: users_in_memory
+  # Définition de l'algorithme pour hasher les mots de passe des utilisateurs
+  password_hashers:
+    App\Entity\User:
+      algorithm: auto
 
-            # activate different ways to authenticate
-            # https://symfony.com/doc/current/security.html#the-firewall
+  # Définition de la source des utilisateurs
+  providers:
+    app_user_provider:
+      entity:
+        class: App\Entity\User # La classe User de l'application
+        property: email # Le champ utilisé pour identifier un utilisateur
 
-            # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
+  # Configuration des firewalls (zones de sécurité)
+  firewalls:
+    # Firewall pour l'authentification via JWT
+    login:
+      pattern: ^/api/login
+      stateless: true
+      json_login:
+        check_path: /api/login # Point d'entrée pour l'authentification
+        username_path: email # Champ utilisé pour le login
+        password_path: password # Champ utilisé pour le mot de passe
+        success_handler: lexik_jwt_authentication.handler.authentication_success
+        failure_handler: lexik_jwt_authentication.handler.authentication_failure
 
-    # Easy way to control access for large sections of your site
-    # Note: Only the *first* access control that matches will be used
-    access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+    # Firewall pour toutes les routes API
+    api:
+      pattern: ^/api
+      stateless: true # Pas de session côté serveur
+      jwt: ~ # Utilisation de JWT pour sécuriser les requêtes
 
-when@test:
-    security:
-        password_hashers:
-            # By default, password hashers are resource intensive and take time. This is
-            # important to generate secure password hashes. In tests however, secure hashes
-            # are not important, waste resources and increase test times. The following
-            # reduces the work factor to the lowest possible values.
-            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
-                algorithm: auto
-                cost: 4 # Lowest possible value for bcrypt
-                time_cost: 3 # Lowest possible value for argon
-                memory_cost: 10 # Lowest possible value for argon
+    # Firewall pour la déconnexion
+    logout:
+      pattern: ^/api/logout
+      stateless: true
+
+  # Définition des règles d'accès (access_control)
+  access_control:
+    # Autorisation pour l'authentification (login)
+    - { path: ^/api/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+
+    # Restriction : Seuls les administrateurs peuvent accéder aux routes /api/users
+    # - { path: ^/api/users, roles: ROLE_ADMIN }
+
+    # Règle générale : Seuls les utilisateurs authentifiés peuvent accéder aux autres routes
+    # - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
